@@ -8,6 +8,8 @@
 
 
 Game::Game(){
+    SDL_Surface *aux,*img;
+
     puts("Initializing SDL...");
     if (SDL_Init(SDL_INIT_EVERYTHING)){
         puts("Error!");
@@ -31,13 +33,19 @@ Game::Game(){
     SDL_ShowCursor(SDL_DISABLE);
     vinfo=SDL_GetVideoInfo();
     puts("Setting up video mode...");
-    screen=SDL_SetVideoMode(vinfo->current_w,vinfo->current_h,32,SDL_SWSURFACE | SDL_FULLSCREEN);//800,480,32,SDL_HWSURFACE);//
+    screen=SDL_SetVideoMode(800,480,32,SDL_HWSURFACE);//vinfo->current_w,vinfo->current_h,32,SDL_SWSURFACE | SDL_FULLSCREEN);//
     if (screen==NULL){
         puts("Error!");
         exit(1);
     }
-    puts("Complete!\n");
+    puts("Complete!");
 
+    aux=IMG_Load("resources/menu_background.png");
+    img=SDL_ConvertSurface(aux,screen->format,SDL_SWSURFACE);
+	SDL_FreeSurface(aux);
+    background=SDL_CreateRGBSurface(SDL_HWSURFACE,screen->w,screen->h,32,255<<16,255<<8,255,0);
+    resize_to(img,background);
+    SDL_FreeSurface(img);
     boxh=screen->h*4/5/height;
     board_x=(screen->w-(boxh+1)*width+1)>>1;
     board_y=(screen->h-(boxh+1)*height+1)>>1;
@@ -46,6 +54,9 @@ Game::Game(){
 }
 
 Game::~Game(){
+	puts("Deleting data");
+	SDL_FreeSurface(background);
+    puts("Complete!");
     puts("Closing SDL_ttf");
     TTF_Quit();
     puts("Complete!");
@@ -74,10 +85,6 @@ void Game::draw_menu(){
     SDL_Surface *aux=IMG_Load("resources/menu_background.png"),*img=SDL_ConvertSurface(aux,screen->format,SDL_SWSURFACE);
     SDL_Rect dst;
 
-    SDL_FreeSurface(aux);
-    background=SDL_CreateRGBSurface(SDL_HWSURFACE,screen->w,screen->h,32,255<<16,255<<8,255,0);
-    resize_to(img,background);
-    SDL_FreeSurface(img);
     aux=IMG_Load("resources/logo.bmp");
     img=SDL_ConvertSurface(aux,screen->format,SDL_SWSURFACE);
     SDL_FreeSurface(aux);
@@ -86,22 +93,19 @@ void Game::draw_menu(){
     resize_to(img,aux);
     SDL_FreeSurface(img);
     SDL_SetColorKey(aux,SDL_SRCCOLORKEY,SDL_MapRGB(screen->format,255,255,255));
-    dst.x=(screen->w-aux->w)/2;
-    dst.y=5;
-    dst.w=dst.h=0;
-    SDL_BlitSurface(aux,NULL,background,&dst);
-    SDL_FreeSurface(aux);
+	set_rect(&dst,(screen->w-aux->w)/2,5,0,0);
     SDL_BlitSurface(background,NULL,screen,NULL);
+    SDL_BlitSurface(aux,NULL,screen,&dst);
+	SDL_FreeSurface(aux);
     SDL_Flip(screen);
 }
 
 void Game::draw_play(){
     SDL_Rect rect;
 
-    /*set_rect(&rect,0,0,(Uint16)screen->w,(Uint16)screen->h);
-    SDL_FillRect(screen,&rect,SDL_MapRGB(screen->format,0,0,0));*/
+    SDL_BlitSurface(background,NULL,screen,NULL);
     set_rect(&rect,board_x-1,board_y-1,(boxh+1)*width+1,(boxh+1)*height+1);
-    SDL_FillRect(screen,&rect,SDL_MapRGB(screen->format,22,22,22));
+    SDL_FillRect(screen,&rect,SDL_MapRGB(screen->format,22,22,22));///22
     for (int i=0;i<height;++i)
         for (int j=0;j<width;++j){
             set_rect(&rect,board_x+(boxh+1)*j,board_y+(boxh+1)*i,boxh,boxh);
@@ -190,7 +194,6 @@ void Game::menu(){
     delete[] on_v;
     delete[] off_v;
     TTF_CloseFont(font);
-    SDL_FreeSurface(background);
 }
 
 void Game::play(){
