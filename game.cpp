@@ -47,6 +47,7 @@ Game::Game(){
     background=SDL_CreateRGBSurface(SDL_HWSURFACE,screen->w,screen->h,32,255<<16,255<<8,255,0);
     resize_to(img,background);
     SDL_FreeSurface(img);
+    font=TTF_OpenFont("resources/font.ttf",screen->h>>4);
     boxh=screen->h*4/5/height;
     board_x=(screen->w-(boxh+1)*width+1)>>1;
     board_y=(screen->h-(boxh+1)*height+1)>>1;
@@ -55,6 +56,9 @@ Game::Game(){
 }
 
 Game::~Game(){
+    puts("Closing font");
+    TTF_CloseFont(font);
+    puts("Complete");
 	puts("Deleting data");
 	SDL_FreeSurface(background);
     puts("Complete!");
@@ -103,7 +107,7 @@ void Game::draw_play(){
 
     SDL_BlitSurface(background,NULL,screen,NULL);
     set_rect(&rect,board_x-1,board_y-1,(boxh+1)*width+1,(boxh+1)*height+1);
-    SDL_FillRect(screen,&rect,SDL_MapRGB(screen->format,22,22,22));///22
+    SDL_FillRect(screen,&rect,SDL_MapRGB(screen->format,22,22,22));
     for (int i=0;i<height;++i)
         for (int j=0;j<width;++j){
             set_rect(&rect,board_x+(boxh+1)*j,board_y+(boxh+1)*i,boxh,boxh);
@@ -114,12 +118,11 @@ void Game::draw_play(){
 
 void Game::menu(){
     //Variables
-    TTF_Font *font=TTF_OpenFont("resources/font.ttf",screen->h>>4);
     FILE *tin=fopen("resources/menu.txt","r");
     SDL_Surface **on_v,**off_v;
     SDL_Color on,off;
     bool quit_menu=0;
-    int l=2,p=0;
+    int l=0,p=0;
 
     //Initialize
     read_color(tin,&off);
@@ -177,7 +180,6 @@ void Game::menu(){
                             break;
                     }
                     break;
-                ///case SDL_MOUSE
             }
         }
         end=SDL_GetTicks();
@@ -192,7 +194,6 @@ void Game::menu(){
     }
     delete[] on_v;
     delete[] off_v;
-    TTF_CloseFont(font);
 }
 
 void Game::play(){
@@ -363,6 +364,17 @@ void Game::play(){
     state=MENU;
 }
 
+void Game::update_score(){
+    SDL_Color color={255,255,255};
+    char score_str[10]="";
+    SDL_Surface *score_to_blit;
+
+    itoa(points,score_str,10);
+    score_to_blit=TTF_RenderText_Blended(font,score_str,color);
+    replace_with(score_to_blit,0,0);
+    SDL_FreeSurface(score_to_blit);
+}
+
 void Game::Tetromino_move(Tetromino *fig[3], bool **grid, key keyboard[4], tetromino_list **tetrominos, int l){
     //Moving downwards
     if (keyboard[2].pressed){
@@ -486,6 +498,7 @@ void Game::Tetromino_down_end(Tetromino *fig[3], bool **grid, tetromino_list **t
     ///MUST CONSIDER IF TETROMINO CAN ENTER
     fig[0]->update=fig[0]->can_enter(grid);
     points+=point_to_add;
+    update_score();
 }
 
 void Game::replace_with(SDL_Surface *from, short x, short y){
