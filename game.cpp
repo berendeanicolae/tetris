@@ -235,6 +235,7 @@ void Game::play(){
 
     //Play
     fig[0]->update=1;
+    update_score();
     while (!quit_play){
         int start=SDL_GetTicks(),end;
         SDL_Event event;
@@ -268,6 +269,8 @@ void Game::play(){
                             keyboard[3].downtime=0;
                             break;
                         case SDLK_RETURN:
+                        case SDLK_ESCAPE:
+                        case SDLK_BACKSPACE:
                             quit_play=1;
                             break;
                         default:
@@ -300,7 +303,9 @@ void Game::play(){
                     break;
             }
         }
-        Tetromino_move(fig,grid,keyboard,tetrominos,l);
+        if (Tetromino_move(fig,grid,keyboard,tetrominos,l)){
+            quit_play=1;
+        }
         if (fig[0]->update){
             if (fig[0]->rotated){
                 fig[0]->ox=fig[0]->x;
@@ -369,13 +374,15 @@ void Game::update_score(){
     char score_str[10]="";
     SDL_Surface *score_to_blit;
 
-    itoa(points,score_str,10);
+    sprintf(score_str,"%d",points);
     score_to_blit=TTF_RenderText_Blended(font,score_str,color);
     replace_with(score_to_blit,0,0);
     SDL_FreeSurface(score_to_blit);
 }
 
-void Game::Tetromino_move(Tetromino *fig[3], bool **grid, key keyboard[4], tetromino_list **tetrominos, int l){
+bool Game::Tetromino_move(Tetromino *fig[3], bool **grid, key keyboard[4], tetromino_list **tetrominos, int l){
+    bool new_cant_enter=0;
+
     //Moving downwards
     if (keyboard[2].pressed){
         if (keyboard[2].downtime<=0){
@@ -388,7 +395,7 @@ void Game::Tetromino_move(Tetromino *fig[3], bool **grid, key keyboard[4], tetro
                 keyboard[2].downtime=60;
             }
             else
-                Tetromino_down_end(fig,grid,tetrominos,l);
+                new_cant_enter=Tetromino_down_end(fig,grid,tetrominos,l);
         }
         else
             keyboard[2].downtime-=frame;
@@ -403,7 +410,7 @@ void Game::Tetromino_move(Tetromino *fig[3], bool **grid, key keyboard[4], tetro
                 fig[0]->update=1;
             }
             else
-                Tetromino_down_end(fig,grid,tetrominos,l);
+                new_cant_enter=Tetromino_down_end(fig,grid,tetrominos,l);
         }
         else
             fig[0]->time-=frame;
@@ -449,6 +456,7 @@ void Game::Tetromino_move(Tetromino *fig[3], bool **grid, key keyboard[4], tetro
         else
             keyboard[3].downtime-=frame;
     }
+    return new_cant_enter;
 }
 
 void Game::Tetromino_delete(Tetromino *fig){
@@ -460,8 +468,9 @@ void Game::Tetromino_delete(Tetromino *fig){
             }
 }
 
-void Game::Tetromino_down_end(Tetromino *fig[3], bool **grid, tetromino_list **tetrominos, int l){
+bool Game::Tetromino_down_end(Tetromino *fig[3], bool **grid, tetromino_list **tetrominos, int l){
     int point_to_add=1;
+    bool new_cant_enter;
 
     for (int i=0;i<fig[0]->node->h;++i)
         for (int j=0;j<fig[0]->node->w;++j)
@@ -496,9 +505,12 @@ void Game::Tetromino_down_end(Tetromino *fig[3], bool **grid, tetromino_list **t
     fig[0]=fig[1];
     fig[1]=new Tetromino(tetrominos[rand()%l]->first,level);
     ///MUST CONSIDER IF TETROMINO CAN ENTER
-    fig[0]->update=fig[0]->can_enter(grid);
-    points+=point_to_add;
-    update_score();
+    new_cant_enter=!(fig[0]->update=fig[0]->can_enter(grid));
+    if (!new_cant_enter){
+        points+=point_to_add;
+        update_score();
+    }
+    return new_cant_enter;
 }
 
 void Game::replace_with(SDL_Surface *from, short x, short y){
