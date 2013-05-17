@@ -58,7 +58,7 @@ Game::Game(){
 Game::~Game(){
     puts("Closing font");
     TTF_CloseFont(font);
-    puts("Complete");
+    puts("Complete!");
 	puts("Deleting data");
 	SDL_FreeSurface(background);
     puts("Complete!");
@@ -504,7 +504,6 @@ bool Game::Tetromino_down_end(Tetromino *fig[3], bool **grid, tetromino_list **t
     delete fig[0];
     fig[0]=fig[1];
     fig[1]=new Tetromino(tetrominos[rand()%l]->first,level);
-    ///MUST CONSIDER IF TETROMINO CAN ENTER
     new_cant_enter=!(fig[0]->update=fig[0]->can_enter(grid));
     if (!new_cant_enter){
         points+=point_to_add;
