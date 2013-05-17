@@ -15,3 +15,7 @@ executable must be in the same directory. You can use other files if you want to
 
 I am sorry for not documenting the files. I started this as a project for school
 and it got bigger than I expected.
+
+To compile run the command g++ -o game game.cpp main.cpp game.h tetromino.cpp 
+tetromino.h functions.h functions.cpp -Wall -lSDL -lSDLmain -lSDL_image -lSDL_ttf -lSDL_mixer .
+If you're trying to compile on windows, you need another flag -lmingw32 .
