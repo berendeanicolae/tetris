@@ -8,7 +8,7 @@
 
 
 Game::Game(){
-    SDL_Surface *aux,*img;
+	SDL_Surface *img;
 
     puts("Initializing SDL...");
     if (SDL_Init(SDL_INIT_EVERYTHING)){
@@ -40,9 +40,10 @@ Game::Game(){
     }
     puts("Complete!");
 
-    aux=IMG_Load("resources/menu_background.png");
-    img=SDL_ConvertSurface(aux,screen->format,SDL_SWSURFACE);
-	SDL_FreeSurface(aux);
+    img=IMG_Load("resources/menu_background.png");
+    background=SDL_ConvertSurface(img,screen->format,SDL_SWSURFACE);
+	SDL_FreeSurface(img);
+	img=background;
     background=SDL_CreateRGBSurface(SDL_HWSURFACE,screen->w,screen->h,32,255<<16,255<<8,255,0);
     resize_to(img,background);
     SDL_FreeSurface(img);
@@ -82,14 +83,11 @@ void Game::run(){
 }
 
 void Game::draw_menu(){
-    SDL_Surface *aux=IMG_Load("resources/menu_background.png"),*img=SDL_ConvertSurface(aux,screen->format,SDL_SWSURFACE);
+    SDL_Surface *aux=IMG_Load("resources/logo.bmp"),*img=SDL_ConvertSurface(aux,screen->format,SDL_SWSURFACE);
     SDL_Rect dst;
 
-    aux=IMG_Load("resources/logo.bmp");
-    img=SDL_ConvertSurface(aux,screen->format,SDL_SWSURFACE);
     SDL_FreeSurface(aux);
     aux=SDL_CreateRGBSurface(SDL_SWSURFACE,img->w*(screen->h-10)/2/img->h,(screen->h-10)/2,32,screen->format->Rmask,screen->format->Gmask,screen->format->Bmask,screen->format->Amask);
-    puts(SDL_GetError());
     resize_to(img,aux);
     SDL_FreeSurface(img);
     SDL_SetColorKey(aux,SDL_SRCCOLORKEY,SDL_MapRGB(screen->format,255,255,255));
@@ -111,6 +109,7 @@ void Game::draw_play(){
             set_rect(&rect,board_x+(boxh+1)*j,board_y+(boxh+1)*i,boxh,boxh);
             SDL_FillRect(screen,&rect,SDL_MapRGB(screen->format,0,0,0));
         }
+    SDL_Flip(screen);
 }
 
 void Game::menu(){
@@ -302,26 +301,46 @@ void Game::play(){
         }
         Tetromino_move(fig,grid,keyboard,tetrominos,l);
         if (fig[0]->update){
-            ///MUST PAY ATTENTION. THE TETROMINO MUST NOT BE DRAWN OUT OF THE BOARD
             if (fig[0]->rotated){
-                SDL_Rect f_loc={(Sint16)(board_x+(fig[0]->x-1)*(boxh+1)),(Sint16)(board_y+(fig[0]->y-fig[0]->node->next->h)*(boxh+1)),(Uint16)(fig[0]->node->w*(boxh+1)),(Uint16)(fig[0]->node->h*(boxh+1))};
-
                 fig[0]->ox=fig[0]->x;
                 fig[0]->oy=fig[0]->y;
                 fig[0]->node=fig[0]->node->next;
-                SDL_BlitSurface(fig[0]->node->look,NULL,screen,&f_loc);
+                if (fig[0]->y-fig[0]->node->h>=0){
+                    SDL_Rect f_loc;  //final location
+
+                    set_rect(&f_loc,(board_x+(fig[0]->x-1)*(boxh+1)),(board_y+(fig[0]->y-fig[0]->node->h)*(boxh+1)),0,0);
+                    SDL_BlitSurface(fig[0]->node->look,NULL,screen,&f_loc);
+                }
+                else{
+                    SDL_Rect copy_from,f_loc;
+
+                    set_rect(&copy_from,0,(fig[0]->node->h-fig[0]->y)*(boxh+1),(fig[0]->node->w)*(boxh+1),fig[0]->y*(boxh+1));
+                    set_rect(&f_loc,board_x+(fig[0]->x-1)*(boxh+1),board_y,0,0);
+                    SDL_BlitSurface(fig[0]->node->look,&copy_from,screen,&f_loc);
+                }
                 fig[0]->update=0;
                 fig[0]->rotated=0;
                 SDL_Flip(screen);
             }
             else{
-                SDL_Rect f_loc={(Sint16)(board_x+(fig[0]->x-1)*(boxh+1)),(Sint16)(board_y+(fig[0]->y-fig[0]->node->h)*(boxh+1)),(Uint16)(fig[0]->node->w*(boxh+1)),(Uint16)(fig[0]->node->h*(boxh+1))};
+                if (fig[0]->y-fig[0]->node->h>=0){
+                    SDL_Rect f_loc;
 
-                SDL_BlitSurface(fig[0]->node->look,NULL,screen,&f_loc);
-                SDL_Flip(screen);
-                fig[0]->update=0;
+                    set_rect(&f_loc,board_x+(fig[0]->x-1)*(boxh+1),board_y+(fig[0]->y-fig[0]->node->h)*(boxh+1),0,0);
+                    SDL_BlitSurface(fig[0]->node->look,NULL,screen,&f_loc);
+
+                }
+                else{
+                    SDL_Rect copy_from,f_loc;
+
+                    set_rect(&copy_from,0,(fig[0]->node->h-fig[0]->y)*(boxh+1),(fig[0]->node->w)*(boxh+1),fig[0]->y*(boxh+1));
+                    set_rect(&f_loc,board_x+(fig[0]->x-1)*(boxh+1),board_y,0,0);
+                    SDL_BlitSurface(fig[0]->node->look,&copy_from,screen,&f_loc);
+                }
                 fig[0]->ox=fig[0]->x;
                 fig[0]->oy=fig[0]->y;
+                fig[0]->update=0;
+                SDL_Flip(screen);
             }
         }
         end=SDL_GetTicks();
@@ -464,6 +483,7 @@ void Game::Tetromino_down_end(Tetromino *fig[3], bool **grid, tetromino_list **t
     delete fig[0];
     fig[0]=fig[1];
     fig[1]=new Tetromino(tetrominos[rand()%l]->first,level);
+    ///MUST CONSIDER IF TETROMINO CAN ENTER
     fig[0]->update=fig[0]->can_enter(grid);
     points+=point_to_add;
 }
