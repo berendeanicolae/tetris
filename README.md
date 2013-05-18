@@ -1,7 +1,7 @@
 tetris
 ======
 
-Feel free to modify these files as you wish. <br/>If you find any bug, please contact<br/>
+Feel free to modify these files as you wish. If you find any bug, please contact<br/>
 me (I did my best to find all, but I may have missed some) by submitting an<br/>
 issue at https://github.com/berendeanicolae/tetris/issues . Thank you!<br/>
 
