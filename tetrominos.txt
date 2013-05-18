@@ -1,9 +1,0 @@
-7
-# Name Width Height Fill   Colors      Turns
-1 I    4     1      XXXX    98 198 223 2
-2 O    2     2      XXXX   255 249  15 1
-3 T    3     2      XXXOXO 191  87 193 4
-4 J    3     2      XXXOOX  64  74 204 4
-5 L    3     2      XXXXOO 252 168  41 4
-6 S    3     2      OXXXXO 180 230  30 2
-7 Z    3     2      XXOOXX 255   0   0 2
