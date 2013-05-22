@@ -8,7 +8,7 @@
 
 
 Game::Game(){
-	SDL_Surface *img;
+    SDL_Surface *img;
 
     puts("Initializing SDL...");
     if (SDL_Init(SDL_INIT_EVERYTHING)){
@@ -42,8 +42,8 @@ Game::Game(){
 
     img=IMG_Load("resources/menu_background.png");
     background=SDL_ConvertSurface(img,screen->format,SDL_SWSURFACE);
-	SDL_FreeSurface(img);
-	img=background;
+    SDL_FreeSurface(img);
+    img=background;
     background=SDL_CreateRGBSurface(SDL_HWSURFACE,screen->w,screen->h,32,255<<16,255<<8,255,0);
     resize_to(img,background);
     SDL_FreeSurface(img);
@@ -59,8 +59,8 @@ Game::~Game(){
     puts("Closing font");
     TTF_CloseFont(font);
     puts("Complete!");
-	puts("Deleting data");
-	SDL_FreeSurface(background);
+    puts("Deleting data");
+    SDL_FreeSurface(background);
     puts("Complete!");
     puts("Closing SDL_ttf");
     TTF_Quit();
@@ -94,11 +94,11 @@ void Game::draw_menu(){
     aux=SDL_CreateRGBSurface(SDL_SWSURFACE,img->w*(screen->h-10)/2/img->h,(screen->h-10)/2,32,screen->format->Rmask,screen->format->Gmask,screen->format->Bmask,screen->format->Amask);
     resize_to(img,aux);
     SDL_FreeSurface(img);
-    SDL_SetColorKey(aux,SDL_SRCCOLORKEY,SDL_MapRGB(screen->format,255,255,255));
-	set_rect(&dst,(screen->w-aux->w)/2,5,0,0);
+    SDL_SetColorKey(aux,SDL_SRCCOLORKEY,SDL_MapRGB(screen->format,0,0,0));
+    set_rect(&dst,(screen->w-aux->w)/2,5,0,0);
     SDL_BlitSurface(background,NULL,screen,NULL);
     SDL_BlitSurface(aux,NULL,screen,&dst);
-	SDL_FreeSurface(aux);
+    SDL_FreeSurface(aux);
     SDL_Flip(screen);
 }
 
@@ -107,7 +107,7 @@ void Game::draw_play(){
 
     SDL_BlitSurface(background,NULL,screen,NULL);
     set_rect(&rect,board_x-1,board_y-1,(boxh+1)*width+1,(boxh+1)*height+1);
-    SDL_FillRect(screen,&rect,SDL_MapRGB(screen->format,22,22,22));
+    SDL_FillRect(screen,&rect,SDL_MapRGB(screen->format,75,75,75));
     for (int i=0;i<height;++i)
         for (int j=0;j<width;++j){
             set_rect(&rect,board_x+(boxh+1)*j,board_y+(boxh+1)*i,boxh,boxh);
@@ -460,7 +460,7 @@ bool Game::Tetromino_move(Tetromino *fig[3], bool **grid, key keyboard[4], tetro
 }
 
 void Game::Tetromino_delete(Tetromino *fig){
-    for (int i=0;i<fig->node->h;++i)
+    for (int i=(fig->y-fig->node->h>=0 ? 0 : fig->node->h-fig->y);i<fig->node->h;++i)
         for (int j=0;j<fig->node->w;++j)
             if (fig->node->shape[i][j]){
                 SDL_Rect loc={(Sint16)(board_x+(fig->ox-1+j)*(boxh+1)),(Sint16)(board_y+(fig->oy-fig->node->h+i)*(boxh+1)),(Uint16)boxh,(Uint16)boxh};
