@@ -1,0 +1,6 @@
+AC_INIT(tetris, 1.0)
+
+AC_PROG_CXX
+AC_LANG(C++)
+
+AC_HAVE_LIBRARY(SDL)
