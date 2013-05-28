@@ -11,7 +11,7 @@ Game::Game(){
     SDL_Surface *img;
 
     puts("Initializing SDL...");
-    if (SDL_Init(SDL_INIT_EVERYTHING)){
+    if (SDL_Init(SDL_INIT_TIMER | SDL_INIT_AUDIO | SDL_INIT_VIDEO)){
         puts("Error!");
         exit(1);
     }
