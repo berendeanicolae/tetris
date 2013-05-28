@@ -1,7 +1,7 @@
 CXX = g++
 CXX_FLAGS = -Wall
 
-LIBS = -lSDL -lSDL_image -lSDL_ttf -lSDL_mixer
+LIBS = -lSDL -lSDLmain -lSDL_image -lSDL_ttf -lSDL_mixer
 
 APP_NAME = tetris
 
