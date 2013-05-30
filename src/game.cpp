@@ -47,10 +47,10 @@ Game::Game(){
     background=SDL_CreateRGBSurface(SDL_HWSURFACE,screen->w,screen->h,32,255<<16,255<<8,255,0);
     resize_to(img,background);
     SDL_FreeSurface(img);
-    font=TTF_OpenFont("resources/font.ttf",screen->h>>4);
+    font=TTF_OpenFont("resources/font.ttf",screen->h/16);
     boxh=screen->h*4/5/height;
-    board_x=(screen->w-(boxh+1)*width+1)>>1;
-    board_y=(screen->h-(boxh+1)*height+1)>>1;
+    board_x=(screen->w-(boxh+1)*width+1)/2;
+    board_y=(screen->h-(boxh+1)*height+1)/2;
     quit=0;
     state=MENU;
 }
@@ -139,9 +139,9 @@ void Game::menu(){
     }
     fclose(tin);
     draw_menu();
-    replace_with(on_v[0],(screen->w-on_v[0]->w)>>1,(screen->h>>1)+0*TTF_FontHeight(font));
+    replace_with(on_v[0],(screen->w-on_v[0]->w)/2,(screen->h/2)+0*TTF_FontHeight(font));
     for (int i=1;i<l;++i)
-        replace_with(off_v[i],(screen->w-off_v[i]->w)>>1,(screen->h>>1)+i*TTF_FontHeight(font));
+        replace_with(off_v[i],(screen->w-off_v[i]->w)/2,(screen->h/2)+i*TTF_FontHeight(font));
 
     //Run
     while (!quit_menu){
@@ -153,16 +153,16 @@ void Game::menu(){
                 case SDL_KEYDOWN:
                     switch (event.key.keysym.sym){
                         case SDLK_UP:
-                            replace_with(off_v[p],(screen->w-off_v[p]->w)>>1,(screen->h>>1)+p*TTF_FontHeight(font));
+                            replace_with(off_v[p],(screen->w-off_v[p]->w)/2,(screen->h/2)+p*TTF_FontHeight(font));
                             ++p;
                             p%=l;
-                            replace_with(on_v[p],(screen->w-on_v[p]->w)>>1,(screen->h>>1)+p*TTF_FontHeight(font));
+                            replace_with(on_v[p],(screen->w-on_v[p]->w)/2,(screen->h/2)+p*TTF_FontHeight(font));
                             break;
                         case SDLK_DOWN:
-                            replace_with(off_v[p],(screen->w-off_v[p]->w)>>1,(screen->h>>1)+p*TTF_FontHeight(font));
+                            replace_with(off_v[p],(screen->w-off_v[p]->w)/2,(screen->h/2)+p*TTF_FontHeight(font));
                             --p;
                             p=(p+l)%l;
-                            replace_with(on_v[p],(screen->w-on_v[p]->w)>>1,(screen->h>>1)+p*TTF_FontHeight(font));
+                            replace_with(on_v[p],(screen->w-on_v[p]->w)/2,(screen->h/2)+p*TTF_FontHeight(font));
                             break;
                         case SDLK_RETURN:
                             switch (p){
@@ -483,7 +483,7 @@ bool Game::Tetromino_down_end(Tetromino *fig[3], bool **grid, tetromino_list **t
         if (full_line){
             SDL_Rect from={(Sint16)board_x,(Sint16)board_y,(Uint16)((boxh+1)*10),(Uint16)((boxh+1)*(fig[0]->y-fig[0]->node->h+i))},to={(Sint16)board_x,(Sint16)(board_y+boxh+1),(Uint16)0,(Uint16)0};
 
-            point_to_add=(point_to_add<<1)+1;
+            point_to_add=(point_to_add*2)+1;
             delete[] grid[fig[0]->y+1-fig[0]->node->h+i];
             for (int j=fig[0]->y+1-fig[0]->node->h+i;j>1;--j)
                 grid[j]=grid[j-1];
