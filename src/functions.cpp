@@ -108,10 +108,9 @@ void read_color(FILE *tin, SDL_Color *color){
     color->b=(Uint8) b;
 }
 
-void set_rect(SDL_Rect *rect, int x, int y, int w, int h){
+void set_rect(SDL_Rect *rect, Sint16 x, Sint16 y, Uint16 w, Uint16 h){
     rect->x=x;
     rect->y=y;
     rect->w=w;
     rect->h=h;
 }
-

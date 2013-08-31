@@ -1,4 +1,5 @@
 #include "tetromino.h"
+#include "functions.h"
 
 ///Must verify what this function is
 void rotate(char *fill, int w, int h);
@@ -155,11 +156,4 @@ bool Tetromino::rotate(bool **grid){
             if (next_node->shape[i][j] && grid[oy+1-next_node->h+i][ox+j])
                 return 0;
     return 1;
-}
-
-void set_rect(SDL_Rect *rect, Sint16 x, Sint16 y, Uint16 w, Uint16 h){
-    rect->x=x;
-    rect->y=y;
-    rect->w=w;
-    rect->h=h;
 }
