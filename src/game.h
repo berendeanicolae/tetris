@@ -9,11 +9,12 @@ class Game{
     private:
         const SDL_VideoInfo *vinfo;
         Mix_Chunk *pop;
-        SDL_Surface *screen,*background;
+        SDL_Surface *screen, *background;
         TTF_Font *font;
         bool quit;
-        Sint16 boxh,board_x,board_y;
-        int level,to_next_lv,points;
+        Sint16 boxh, board_x, board_y;
+        Sint16 next_box_x, next_box_y;
+        int level, to_next_lv, points;
         enum{
             MENU,
             PLAY
@@ -25,6 +26,7 @@ class Game{
     private:
         void draw_menu();
         void draw_play();
+        void draw_next(tetromino_node *tetromino);
         void menu();
         void play();
         void update_score();
