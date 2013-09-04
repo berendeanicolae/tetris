@@ -33,7 +33,7 @@ Game::Game(){
     SDL_ShowCursor(SDL_DISABLE);
     vinfo = SDL_GetVideoInfo();
     puts("Setting up video mode...");
-    screen = SDL_SetVideoMode(800, 480, 32, SDL_SWSURFACE);//vinfo->current_w, vinfo->current_h, 32, SDL_SWSURFACE | SDL_FULLSCREEN);//
+    screen = SDL_SetVideoMode(800, 480, 32, SDL_SWSURFACE);//vinfo->current_w, vinfo->current_h, 24, SDL_SWSURFACE | SDL_FULLSCREEN);//
     if (screen == NULL){
         puts("Error!");
         exit(1);
@@ -44,12 +44,11 @@ Game::Game(){
     background = SDL_ConvertSurface(img, screen->format, SDL_SWSURFACE);
     SDL_FreeSurface(img);
     img = background;
-    background = SDL_CreateRGBSurface(SDL_HWSURFACE, screen->w, screen->h, 32, 255<<16, 255<<8, 255, 0);
+    background = SDL_CreateRGBSurface(SDL_HWSURFACE, screen->w, screen->h, 24, screen->format->Rmask, screen->format->Gmask, screen->format->Bmask, 0);
     resize_to(img, background);
     SDL_FreeSurface(img);
     font = TTF_OpenFont("resources/font.ttf", screen->h/16);
     boxh = screen->h*4/5/height;
-    printf("%d",boxh);
     board_x = (screen->w-(boxh+1)*width+1)/2;
     board_y = (screen->h-(boxh+1)*height+1)/2;
     next_box_x = screen->w*3/4;
@@ -94,38 +93,73 @@ void Game::draw_menu(){
     SDL_Rect dst;
 
     SDL_FreeSurface(aux);
-    aux = SDL_CreateRGBSurface(SDL_SWSURFACE,img->w*(screen->h-10)/2/img->h,(screen->h-10)/2,32,screen->format->Rmask,screen->format->Gmask,screen->format->Bmask,screen->format->Amask);
-    resize_to(img,aux);
+    aux = SDL_CreateRGBSurface(SDL_SWSURFACE, img->w*(screen->h-10)/2/img->h, (screen->h-10)/2, 24, screen->format->Rmask, screen->format->Gmask, screen->format->Bmask, screen->format->Amask);
+    resize_to(img, aux);
     SDL_FreeSurface(img);
-    SDL_SetColorKey(aux,SDL_SRCCOLORKEY,SDL_MapRGB(screen->format,0,0,0));
-    set_rect(&dst,(screen->w-aux->w)/2,5,0,0);
-    SDL_BlitSurface(background,NULL,screen,NULL);
-    SDL_BlitSurface(aux,NULL,screen,&dst);
+    SDL_SetColorKey(aux,SDL_SRCCOLORKEY, SDL_MapRGB(screen->format, 0, 0, 0));
+    set_rect(&dst, (screen->w-aux->w)/2, 5, 0, 0);
+    SDL_BlitSurface(background, NULL, screen, NULL);
+    SDL_BlitSurface(aux, NULL, screen, &dst);
     SDL_FreeSurface(aux);
     SDL_Flip(screen);
 }
 
 void Game::draw_play(){
-    SDL_Rect rect;
+    SDL_Rect from, to;
+    SDL_Surface *line=SDL_CreateRGBSurface(SDL_SWSURFACE, (boxh+1)*4+1+boxh/2*2, 1, 24, screen->format->Rmask, screen->format->Gmask, screen->format->Bmask, 0);
+    SDL_Surface *column=SDL_CreateRGBSurface(SDL_SWSURFACE, 1, (boxh+1)*4+1+boxh/2*2, 24, screen->format->Rmask, screen->format->Gmask, screen->format->Bmask, 0);
+    char *line_pixels,* column_pixels;
 
     SDL_BlitSurface(background,NULL,screen,NULL);
-    //draw the board
-    set_rect(&rect,board_x-1,board_y-1,(boxh+1)*width+1,(boxh+1)*height+1);
-    SDL_FillRect(screen, &rect, SDL_MapRGB(screen->format,75,75,75));
+    //draw the board and fill it with black squares
+    set_rect(&to,board_x-1,board_y-1,(boxh+1)*width+1,(boxh+1)*height+1);
+    SDL_FillRect(screen, &to, SDL_MapRGB(screen->format,75,75,75));
     for (int i=0;i<height;++i)
         for (int j=0;j<width;++j){
-            set_rect(&rect,board_x+(boxh+1)*j,board_y+(boxh+1)*i,boxh,boxh);
-            SDL_FillRect(screen,&rect,SDL_MapRGB(screen->format,0,0,0));
+            set_rect(&to,board_x+(boxh+1)*j,board_y+(boxh+1)*i,boxh,boxh);
+            SDL_FillRect(screen,&to,SDL_MapRGB(screen->format,0,0,0));
         }
     //draw the next box
-    set_rect(&rect,next_box_x-1,next_box_y-1,(boxh+1)*4+1,(boxh+1)*4+1);
-    SDL_FillRect(screen,&rect, SDL_MapRGB(screen->format,75,75,75));
-    /*for (int i=0;i<4;++i)
-        for (int j=0;j<4;++j){
-            set_rect(&rect, next_box_x+(boxh+1)*j, next_box_y+(boxh+1)*i, boxh, boxh);
-            SDL_FillRect(screen, &rect, SDL_MapRGB(screen->format, 0, 0, 0));
-        }*/
-    SDL_Flip(screen);
+    set_rect(&to,next_box_x-1,next_box_y-1,(boxh+1)*4+1,(boxh+1)*4+1);
+    SDL_FillRect(screen,&to, SDL_MapRGB(screen->format,75,75,75));
+    //draw the padding for the next box
+
+    line_pixels = (char *)line->pixels;
+    column_pixels = (char *)column->pixels;
+
+    line_pixels += boxh/2*line->format->BytesPerPixel;
+    column_pixels += boxh/2*column->pitch;
+    for (int i=0; i<5; ++i){
+        *line_pixels = *(line_pixels+1) = *(line_pixels+2) = 75;
+        *column_pixels = *(column_pixels+1) = *(column_pixels+2) = 75;
+        line_pixels += (boxh+1)*line->format->BytesPerPixel;
+        column_pixels += (boxh+1)*column->pitch;
+    }
+    for (int i=1; i<=boxh/2; ++i){
+        //top
+        set_rect(&from, boxh/2-i, 0, (boxh+1)*4+2*i+1, 1);
+        set_rect(&to, next_box_x-1-i, next_box_y-1-i, 0, 0);
+        SDL_SetAlpha(line, SDL_SRCALPHA, 255-i*255/(boxh/2));
+        SDL_BlitSurface(line, &from, screen, &to);
+        //right
+        set_rect(&from, 0, boxh/2-i+1, 1, (boxh+1)*4+2*(i-1)+1);
+        set_rect(&to, next_box_x+(boxh+1)*4-1+i, next_box_y-i, 0, 0);
+        SDL_SetAlpha(column, SDL_SRCALPHA, 255-i*255/(boxh/2));
+        SDL_BlitSurface(column, &from, screen, &to);
+        //bottom
+        set_rect(&from, boxh/2-i, 0, (boxh+1)*4+2*i+1, 1);
+        set_rect(&to, next_box_x-1-i, next_box_y+(boxh+1)*4-1+i, 0, 0);
+        SDL_SetAlpha(line, SDL_SRCALPHA, 255-i*255/(boxh/2));
+        SDL_BlitSurface(line,&from, screen, &to);
+        //left
+        set_rect(&from, 0, boxh/2-i+1, 1, (boxh+1)*4+2*(i-1)+1);
+        set_rect(&to, next_box_x-1-i, next_box_y-i, 0, 0);
+        SDL_SetAlpha(column, SDL_SRCALPHA, 255-i*255/(boxh/2));
+        SDL_BlitSurface(column, &from, screen, &to);
+    }
+
+    SDL_FreeSurface(line);
+    SDL_FreeSurface(column);
 }
 
 // Fill the next box with black then paste the next tetromino in there.
